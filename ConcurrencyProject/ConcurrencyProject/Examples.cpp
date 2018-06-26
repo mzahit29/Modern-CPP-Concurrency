@@ -4,6 +4,9 @@
 #include <mutex>
 #include <iostream>
 #include "thread_guard.h"
+#include <vector>
+#include <algorithm>
+#include <numeric>
 
 using namespace std;
 
@@ -168,7 +171,7 @@ void f2(int& x)
 		// This will cause runtime exception when thread that spawned this thread exits before
 		// x is created inside the parent thread and this child thread is referencing it. If parent
 		// exits before this will be a read access violation
-		cout << "x is : " << x << endl;
+		//cout << "x is : " << x << endl;
 		this_thread::sleep_for(chrono::milliseconds(100));
 		if (++i > 20) break;
 	}
@@ -228,4 +231,52 @@ void Examples::useful_thread_functions_run()
 
 	cout << "\n\nAllowed max number of parallel threads: " << thread::hardware_concurrency() << endl;
 
+}
+
+
+void accumulate_block(vector<int>::iterator begin, vector<int>::iterator end, int& result)
+{
+	result = std::accumulate(begin, end, 0);
+	cout << this_thread::get_id() << " - result: " << result << endl;
+}
+void Examples::parallel_accumulate_run()
+{
+	// List to find the sum
+	int num_of_elements = 1000;
+	vector<int> list(num_of_elements);
+	for(int i = 0; i < num_of_elements; ++i)
+	{
+		list[i] = 1;
+	}
+
+	int min_load = 100;
+	// Find the necessary num of threads
+	int distance = std::distance(list.begin(), list.end());
+	int max_threads = distance / min_load;
+	int allowed_thread = thread::hardware_concurrency();
+	int running_thread_count = std::min(max_threads, allowed_thread);
+
+	vector<thread> threads(running_thread_count - 1);
+	vector<int> results(running_thread_count);
+
+	// Send particular block to separate thread to accumulate
+	vector<int>::iterator block_start = list.begin();
+	vector<int>::iterator block_end = list.end();
+	int block_size = distance / running_thread_count;
+	for (int i = 0; i < running_thread_count - 1; ++i)
+	{
+		block_end = block_start;
+		std::advance(block_end, block_size);
+		threads[i] = thread{ accumulate_block, block_start, block_end, std::ref(results[i]) };
+		block_start = block_end;
+	}
+
+	// Accumulate the last block in main thread
+	accumulate_block(block_start, list.end(), results[running_thread_count - 1]);
+
+	// Join all the threads
+	for_each(threads.begin(), threads.end(), std::mem_fn(&thread::join));
+
+	int final_sum = std::accumulate(results.begin(), results.end(), 0);
+	cout << "Sum of values in list: " << final_sum << endl;
 }
