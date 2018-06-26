@@ -158,17 +158,19 @@ void f1()
 	int x = 10;
 	thread t{ f2, std::ref(x) };
 	t.detach();
-	this_thread::sleep_for(chrono::milliseconds(2000));
+	this_thread::sleep_for(chrono::milliseconds(1000));
 }
 void f2(int& x)
 {
+	int i = 0;
 	while(true)
 	{
 		// This will cause runtime exception when thread that spawned this thread exits before
 		// x is created inside the parent thread and this child thread is referencing it. If parent
 		// exits before this will be a read access violation
 		cout << "x is : " << x << endl;
-		this_thread::sleep_for(chrono::milliseconds(500));
+		this_thread::sleep_for(chrono::milliseconds(200));
+		if (++i > 20) break;
 	}
 }
 void Examples::passing_parameters_by_ref_problem_run()
@@ -176,4 +178,34 @@ void Examples::passing_parameters_by_ref_problem_run()
 	cout << "\n\n PASSING PARAMETERS TO THREAD BY REFERENCE CAUSING READ ACCESS VIOLATION_________________________________" << endl;
 	thread t1{ f1 };
 	t1.join();
+}
+
+void g()
+{
+	cout << "g()" << endl;
+}
+void h()
+{
+	cout << "h()" << endl;
+}
+void Examples::passing_thread_ownership_run()
+{
+	cout << "\n\n PASSING THREAD OWNERSHIP_________________________________" << endl;
+	thread t1{ g };
+	//thread t2 = t1; // Compile Error: Copy constructer is deleted
+	thread t2 = std::move(t1);  // Allowed: std::move turns t1 into a r-value reference, this triggers the move constructor which is not deleted for thread class
+	// Now t1 is nullptr
+	t1 = thread{ h };  // Right hand side is a temporary (r-value). Again this will trigger move constructor, which is allowed.
+	//t1 = thread{ h };  // This will cause program to crash, because t1's previously pointed to thread is lost and it will not be able to join.
+
+	if (t1.joinable())
+	{
+		cout << "t1 is joinable" << endl;
+		t1.join();
+	}
+	if (t2.joinable())
+	{
+		cout << "t2 is joinable" << endl;
+		t2.join();
+	}
 }
