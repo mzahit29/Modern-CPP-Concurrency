@@ -67,3 +67,25 @@ void Examples::join_and_detach_run()
 	t3.detach();  // main thread is not blocked until t3 finishes. t3 runs independently and main thread continues.
 				  // If main thread happens to finish before t3 then t3 will not be able to finish its execution
 }
+
+
+
+
+void Examples::handling_join_in_exceptions_run()
+{
+	cout << "\n\n HANDLING JOIN IN EXCEPTIONS EXAMPLES_________________________________" << endl;
+
+	thread t1(func1);
+
+	try
+	{
+		throw std::runtime_error("Run time exception in main thread");
+		t1.join();	// This won't be called due to the exception thrown before it
+	}
+	catch (std::exception & e)
+	{
+		cout << e.what() << endl;
+		t1.join();	// If you don't call t1.join() in catch then program will be aborted with error
+	}
+
+}
