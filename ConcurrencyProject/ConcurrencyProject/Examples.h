@@ -8,4 +8,5 @@ public:
 	static void passing_parameters_to_thread();
 	static void passing_parameters_by_ref_problem_run();
 	static void passing_thread_ownership_run();
+	static void useful_thread_functions_run();
 };

@@ -131,7 +131,7 @@ void monitor_variable(const int & x)
 	{
 		cout << "Value of x is " << x << endl;
 		if (x == 15) { cout << "x value is set to 15 from another thread, exiting loop " << endl; break; }
-		this_thread::sleep_for(std::chrono::milliseconds(200));
+		this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 }
 
@@ -144,7 +144,7 @@ void Examples::passing_parameters_to_thread()
 
 	int x{ 10 };
 	thread t2{ monitor_variable, std::ref(x) }; // Remember you have to use std::ref(x) to pass x as reference to the function monitor_variable(int & x)
-	this_thread::sleep_for(std::chrono::milliseconds(2000));
+	this_thread::sleep_for(std::chrono::milliseconds(1000));
 	cout << "Setting x to 15 in main thread" << endl;
 	x = 15; // This will end the while loop in t2 and it will exit
 
@@ -158,7 +158,7 @@ void f1()
 	int x = 10;
 	thread t{ f2, std::ref(x) };
 	t.detach();
-	this_thread::sleep_for(chrono::milliseconds(1000));
+	this_thread::sleep_for(chrono::milliseconds(500));
 }
 void f2(int& x)
 {
@@ -169,7 +169,7 @@ void f2(int& x)
 		// x is created inside the parent thread and this child thread is referencing it. If parent
 		// exits before this will be a read access violation
 		cout << "x is : " << x << endl;
-		this_thread::sleep_for(chrono::milliseconds(200));
+		this_thread::sleep_for(chrono::milliseconds(100));
 		if (++i > 20) break;
 	}
 }
@@ -208,4 +208,24 @@ void Examples::passing_thread_ownership_run()
 		cout << "t2 is joinable" << endl;
 		t2.join();
 	}
+}
+
+void g1()
+{
+	cout << "Thread id: " << this_thread::get_id() << endl;
+}
+void Examples::useful_thread_functions_run()
+{
+	cout << "\n\nUSEFUL THREAD FUNCTIONS_________________________________" << endl;
+	thread t1{ g1 };
+	cout << "t1's id seen from main thread: " << t1.get_id() << endl;
+	t1.join();
+	cout << "t1's id seen from main thread after t1.join(): " << t1.get_id() << endl;
+
+	// Default constructed thread is non-joinable so it will always print 0 as id.
+	thread t2;
+	cout << "t2's default constructed so it is non-joinable. Its id seen from main thread: " << t2.get_id() << endl;
+
+	cout << "\n\nAllowed max number of parallel threads: " << thread::hardware_concurrency() << endl;
+
 }
