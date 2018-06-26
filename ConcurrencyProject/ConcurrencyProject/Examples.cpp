@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <iostream>
+#include "thread_guard.h"
 
 using namespace std;
 
@@ -88,4 +89,31 @@ void Examples::handling_join_in_exceptions_run()
 		t1.join();	// If you don't call t1.join() in catch then program will be aborted with error
 	}
 
+}
+
+void Examples::handling_join_in_exceptions_with_thread_guard_run()
+{
+	cout << "\n\n HANDLING JOIN WITH THREAD GUARD IN EXCEPTIONS EXAMPLES_________________________________" << endl;
+	// Note that during stack unwind the local objects are destructed in REVERSE ORDER. This means tg will be destructed
+	// first, then t1. If t1 was destructed first then this code would have failed.
+	// i.e. If the following code was possible (it is not possible since we deleted the copy assignment operator)
+	// then t2 would be destructed before tg2. So when tg2 is destructed it would try to call join on t2 which would
+	// give run time error.
+	/*thread_guard tg2;
+	thread t2{ func1 };
+	tg2 = t2;*/
+	thread t1{ func1 };
+	thread_guard tg{ t1 };
+
+
+	// Now we don't need to explicitly call the join of t1. It will be called when this function's stack is unwinded.
+	try
+	{
+		throw std::runtime_error("Run time exception in main thread");
+		t1.join();	// This won't be called due to the exception thrown before it but no need to call it either
+	}
+	catch (std::exception & e)
+	{
+		cout << e.what() << endl;
+	}
 }

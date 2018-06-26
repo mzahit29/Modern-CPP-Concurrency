@@ -24,6 +24,9 @@
     <ClInclude Include="Examples.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="thread_guard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
