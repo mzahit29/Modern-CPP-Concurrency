@@ -10,4 +10,5 @@ public:
 	static void passing_thread_ownership_run();
 	static void useful_thread_functions_run();
 	static void parallel_accumulate_run();
+	static void lock_guard_run();
 };

@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <numeric>
+#include <list>
 
 using namespace std;
 
@@ -279,4 +280,36 @@ void Examples::parallel_accumulate_run()
 
 	int final_sum = std::accumulate(results.begin(), results.end(), 0);
 	cout << "Sum of values in list: " << final_sum << endl;
+}
+
+mutex m;
+void add_to_list(int const & x, list<int> & my_list)
+{
+	// RAII in action: unlock() on destruction of lock_guard<T> object.
+	lock_guard<mutex> lg(m);
+	cout << "[" << this_thread::get_id() << "]" << "Adding " << x << " to list" << endl;
+	my_list.push_back(x);
+}
+void list_size(const list<int> & my_list)
+{
+	lock_guard<mutex> lg(m);
+	cout << "[" << this_thread::get_id() << "]" << "Size of list is : " << my_list.size() << endl;
+}
+
+
+void Examples::lock_guard_run()
+{
+	list<int> my_list;
+
+	vector<thread> threads(4);
+	threads[0] = thread{ add_to_list, 10, std::ref(my_list) };
+	threads[1] = thread{ list_size, std::ref(my_list) };
+	threads[2] = thread{ add_to_list, 10, std::ref(my_list) };
+	threads[3] = thread{ list_size, std::ref(my_list) };
+
+	for(auto& t : threads)
+	{
+		t.join();
+	}
+
 }
