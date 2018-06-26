@@ -151,3 +151,29 @@ void Examples::passing_parameters_to_thread()
 	t2.join();
 
 }
+
+void f2(int& x); // forward declaration
+void f1()
+{
+	int x = 10;
+	thread t{ f2, std::ref(x) };
+	t.detach();
+	this_thread::sleep_for(chrono::milliseconds(2000));
+}
+void f2(int& x)
+{
+	while(true)
+	{
+		// This will cause runtime exception when thread that spawned this thread exits before
+		// x is created inside the parent thread and this child thread is referencing it. If parent
+		// exits before this will be a read access violation
+		cout << "x is : " << x << endl;
+		this_thread::sleep_for(chrono::milliseconds(500));
+	}
+}
+void Examples::passing_parameters_by_ref_problem_run()
+{
+	cout << "\n\n PASSING PARAMETERS TO THREAD BY REFERENCE CAUSING READ ACCESS VIOLATION_________________________________" << endl;
+	thread t1{ f1 };
+	t1.join();
+}

@@ -6,4 +6,5 @@ public:
 	static void handling_join_in_exceptions_run();
 	static void handling_join_in_exceptions_with_thread_guard_run();
 	static void passing_parameters_to_thread();
+	static void passing_parameters_by_ref_problem_run();
 };
