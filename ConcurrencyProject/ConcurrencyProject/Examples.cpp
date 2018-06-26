@@ -117,3 +117,37 @@ void Examples::handling_join_in_exceptions_with_thread_guard_run()
 		cout << e.what() << endl;
 	}
 }
+
+template <typename T>
+T add(const T& x, const T& y)
+{
+	cout << x << " + " << y << " = " << x + y << endl;
+	return x + y;
+}
+
+void monitor_variable(const int & x)
+{
+	while (true)
+	{
+		cout << "Value of x is " << x << endl;
+		if (x == 15) { cout << "x value is set to 15 from another thread, exiting loop " << endl; break; }
+		this_thread::sleep_for(std::chrono::milliseconds(200));
+	}
+}
+
+void Examples::passing_parameters_to_thread()
+{
+	cout << "\n\n PASSING PARAMETERS TO THREAD_________________________________" << endl;
+	thread t{ add<float>, 3.f, 4.f };
+
+	t.join();
+
+	int x{ 10 };
+	thread t2{ monitor_variable, std::ref(x) }; // Remember you have to use std::ref(x) to pass x as reference to the function monitor_variable(int & x)
+	this_thread::sleep_for(std::chrono::milliseconds(2000));
+	cout << "Setting x to 15 in main thread" << endl;
+	x = 15; // This will end the while loop in t2 and it will exit
+
+	t2.join();
+
+}
