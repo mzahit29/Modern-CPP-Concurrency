@@ -13,4 +13,5 @@ public:
 	static void lock_guard_run();
 	static void condition_variable_run();
 	static void future_run();
+	static void future_run_2();
 };

@@ -378,7 +378,7 @@ void do_other_calculations()
 
 void Examples::future_run()
 {
-	cout << "\n\ASYNC OPERATIONS AND FUTURE OBJECT_________________________________" << endl;
+	cout << "\n\nASYNC OPERATIONS AND FUTURE OBJECT_________________________________" << endl;
 
 	// This is not blocking main thread. find_answer_how_old_universe_is() will be executed in another thread.
 	future<int> the_answer_future = async(find_answer_how_old_universe_is);  
@@ -386,4 +386,32 @@ void Examples::future_run()
 	cout << "Main thread needs the answer from future at this point, if future hasn't yet finished, main thread will block" << endl;
 	cout << "Calling future.get() to get the result from the future thread" << endl;
 	cout << "The answer is " << the_answer_future.get() << endl;
+}
+
+
+int add_(int x, int y)
+{
+	cout << "Addition runs on thread: " << this_thread::get_id() << endl;
+	return x + y;
+}
+int subtract(int x, int y)
+{
+	cout << "Subtraction runs on thread: " << this_thread::get_id() << endl;
+	return x - y;
+}
+void hello(const string & name)
+{
+	cout << "hello runs on thread: " << this_thread::get_id() << endl;
+}
+void Examples::future_run_2()
+{
+	cout << "\n\nASYNC OPERATIONS AND FUTURE OBJECT (ASYNC OR DEFERRED)_________________________________" << endl;
+	future<int> future1 = async(std::launch::async, add_, 10, 15); // Function runs on separate thread in parallel
+	future<int> future2 = async(std::launch::deferred, subtract, 9, 4);  // Function runs on this thread (deferred) as soon as future.get() is called.
+	future<void> future3 = async(std::launch::async | std::launch::deferred, hello, "Zahit"); // Compiler decides whether function will run on separate thread or not
+
+	cout << "Main thread id: " << this_thread::get_id() << endl;
+	cout << "Value received using future1 : " << future1.get() << endl;
+	cout << "Value received using future2 : " << future2.get() << endl;
+	future3.get();
 }
