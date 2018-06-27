@@ -14,4 +14,5 @@ public:
 	static void condition_variable_run();
 	static void future_run();
 	static void future_run_2();
+	static void packaged_task_run();
 };

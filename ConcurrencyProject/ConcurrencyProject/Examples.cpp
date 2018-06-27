@@ -327,7 +327,7 @@ void keep_moving()
 {
 	while (true)
 	{
-		this_thread::sleep_for(chrono::milliseconds(100));
+		this_thread::sleep_for(chrono::milliseconds(20));
 		++distance_covered;
 		cout << "I am the driver, distance we have covered so far is : " << distance_covered << endl;
 		// Wake up the other threads that are sleeping on condition variable cv.
@@ -414,4 +414,21 @@ void Examples::future_run_2()
 	cout << "Value received using future1 : " << future1.get() << endl;
 	cout << "Value received using future2 : " << future2.get() << endl;
 	future3.get();
+}
+
+void Examples::packaged_task_run()
+{
+	cout << "\n\nPACKAGED TASK_________________________________" << endl;
+	packaged_task<int(int, int)> task1(add_);
+	future<int> future1 = task1.get_future();  // Note that future template param is int because add returns int
+	cout << "Main thread id: " << this_thread::get_id() << endl;
+	task1(5, 15); // Unlike async, you have to call the task explicitly
+	cout << "Task normal result: " << future1.get() << endl;
+
+	packaged_task<int(int, int)> task2(add_);
+	future<int> future2 = task2.get_future();
+	thread t{ std::move(task2), 17, 8 };  // If you want the packaged task to be executed on a separate thread create a thread, but you have to use std::move to construct thread
+	t.detach();
+	cout << "Task thread result: " << future2.get() << endl;
+
 }
