@@ -242,6 +242,7 @@ void accumulate_block(vector<int>::iterator begin, vector<int>::iterator end, in
 }
 void Examples::parallel_accumulate_run()
 {
+	cout << "\n\nPARALLEL ACCUMULATE_________________________________" << endl;
 	// List to find the sum
 	int num_of_elements = 1000;
 	vector<int> list(num_of_elements);
@@ -292,6 +293,7 @@ void add_to_list(int const & x, list<int> & my_list)
 }
 void list_size(const list<int> & my_list)
 {
+	// RAII in action: unlock() on destruction of lock_guard<T> object.
 	lock_guard<mutex> lg(m);
 	cout << "[" << this_thread::get_id() << "]" << "Size of list is : " << my_list.size() << endl;
 }
@@ -299,6 +301,7 @@ void list_size(const list<int> & my_list)
 
 void Examples::lock_guard_run()
 {
+	cout << "\n\nLOCK GUARD_________________________________" << endl;
 	list<int> my_list;
 
 	vector<thread> threads(4);
@@ -311,5 +314,49 @@ void Examples::lock_guard_run()
 	{
 		t.join();
 	}
+
+}
+
+int total_distance{ 10 };
+int distance_covered{ 0 };
+std::condition_variable cv;
+std::mutex m2;
+
+void keep_moving()
+{
+	while (true)
+	{
+		this_thread::sleep_for(chrono::milliseconds(100));
+		++distance_covered;
+		cout << "I am the driver, distance we have covered so far is : " << distance_covered << endl;
+		// Wake up the other threads that are sleeping on condition variable cv.
+		if (distance_covered == total_distance) { cv.notify_one(); };
+
+		if (distance_covered == 15) { break; }
+	}
+}
+void ask_driver_to_wake_u_up_at_right_time()
+{
+	// We can not use lock_guard<mutex> because it locks the mutex on the constructor and doesn't have lock and unlock calls.
+	// Where as unique_lock doesn't lock the wrapped mutex on construction and has lock unlock capability. Lock unlock is
+	// required by condition variable. Remember cv wait will first call ul.lock() to lock the mutex, then check the condition and will call ul.unlock()
+	// to unlock the mutex when it sees that the condition doesn't hold, and make thread go back to sleep until some other threads wakes it up on that condition variable again.
+	// If the condition holds, then cv.wait will finish and when going out of scope unique_lock will be destructed which will unlock the mutex on
+	// destructor. Also remember that OS can wake the thread sleeping on cv spuriously even thought the condition hasn't yet been
+	// satisfied. If so cv.wait() will lock ul, check that the condition doesn't hold and unlock ul and go back to sleep.
+	unique_lock<mutex> ul(m2);
+	// cv.wait will lock the ul on cv.wait at first. In the first moment condition will not be true since distance covered is yet 0
+	// Then cv will make this thread sleep. It will wake up when another thread calls cv.notify_one();
+	cv.wait(ul, [] {return distance_covered >= total_distance; });
+	cout << "Finally I am there, distance_covered = " << distance_covered << endl;
+}
+void Examples::condition_variable_run()
+{
+	cout << "\n\nCONDITION VARIABLE_________________________________" << endl;
+	thread driver_thread{ keep_moving };
+	thread passenger_thread{ ask_driver_to_wake_u_up_at_right_time };
+
+	passenger_thread.join();
+	driver_thread.join();
 
 }

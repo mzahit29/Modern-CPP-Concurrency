@@ -11,4 +11,5 @@ public:
 	static void useful_thread_functions_run();
 	static void parallel_accumulate_run();
 	static void lock_guard_run();
+	static void condition_variable_run();
 };
