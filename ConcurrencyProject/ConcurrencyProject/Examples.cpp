@@ -432,3 +432,25 @@ void Examples::packaged_task_run()
 	cout << "Task thread result: " << future2.get() << endl;
 
 }
+
+void print_int(future<int>& fut)
+{
+	cout << "Waiting for value in print_thread" << endl;
+	cout << "value is ready as promised: " << fut.get() << endl;
+}
+void Examples::promise_run()
+{
+	cout << "\n\nPROMISE_________________________________" << endl;
+	// You create a promise and get future object from it. This promise will be used to pass value from main thread to child thread.
+	// Main thread uses the promise object to set_value() and child thread reads the value using fut object passed to it with std::ref(fut)
+	promise<int> prom;
+	future<int> fut = prom.get_future();
+
+	thread print_thread(print_int, std::ref(fut));
+
+	this_thread::sleep_for(chrono::milliseconds(5000));
+	cout << "Setting the value in main thread" << endl;
+	prom.set_value(100);
+
+	print_thread.join();
+}
