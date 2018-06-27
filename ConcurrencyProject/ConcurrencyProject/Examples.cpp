@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <numeric>
 #include <list>
+#include <future>
 
 using namespace std;
 
@@ -359,4 +360,30 @@ void Examples::condition_variable_run()
 	passenger_thread.join();
 	driver_thread.join();
 
+}
+
+int find_answer_how_old_universe_is()
+{
+	// assume this is a function which will take a long time to compute, therefore it will be called async so that 
+	// main thread doesn't have to wait for it
+	this_thread::sleep_for(chrono::milliseconds(1000));
+	return 5000;
+}
+void do_other_calculations()
+{
+	cout << "Main thread is continuing its calculations without waiting for future thread" << endl;
+	this_thread::sleep_for(chrono::milliseconds(200));
+	cout << "Main threa calculations are done" << endl;
+}
+
+void Examples::future_run()
+{
+	cout << "\n\ASYNC OPERATIONS AND FUTURE OBJECT_________________________________" << endl;
+
+	// This is not blocking main thread. find_answer_how_old_universe_is() will be executed in another thread.
+	future<int> the_answer_future = async(find_answer_how_old_universe_is);  
+	do_other_calculations();  // main thread directly jumps to continue doing its own stuff
+	cout << "Main thread needs the answer from future at this point, if future hasn't yet finished, main thread will block" << endl;
+	cout << "Calling future.get() to get the result from the future thread" << endl;
+	cout << "The answer is " << the_answer_future.get() << endl;
 }

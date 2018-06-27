@@ -12,4 +12,5 @@ public:
 	static void parallel_accumulate_run();
 	static void lock_guard_run();
 	static void condition_variable_run();
+	static void future_run();
 };
