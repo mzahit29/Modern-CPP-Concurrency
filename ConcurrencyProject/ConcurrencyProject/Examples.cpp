@@ -448,9 +448,50 @@ void Examples::promise_run()
 
 	thread print_thread(print_int, std::ref(fut));
 
-	this_thread::sleep_for(chrono::milliseconds(5000));
+	this_thread::sleep_for(chrono::milliseconds(1000));
 	cout << "Setting the value in main thread" << endl;
 	prom.set_value(100);
 
 	print_thread.join();
+}
+
+void print_func(future<int> & fut)
+{
+	cout << "Inside print_func waiting for future.get()" << endl;
+
+	try {
+		cout << "Got the value: " << fut.get() << endl;  // If exception is set from prom.set_exception() it will be caught in this thread as well
+	}
+	catch (std::exception & e) {
+		cout << "Exception caught in print_thread: " << this_thread::get_id() << " : " << e.what() << endl;
+	}
+}
+void calculate_sqrt(promise<int> & prom)
+{
+	int x = 1;
+	cout << "Please, enter an integer value: ";
+	
+	try {
+		cin >> x;
+		if (x < 0) throw exception("ERROR: Negative value");
+		prom.set_value(sqrt(x));
+	}
+	catch (std::exception & e) {
+		cout << "Exception caught in calculate_sqrt_thread: " << this_thread::get_id() << " : " << e.what() << endl;
+		prom.set_exception(current_exception()); // Propagating the exception to thread which is going to call fut.get()
+	}
+
+
+}
+void Examples::promise_exception_propagate_run()
+{
+	cout << "\n\nPROMISE EXCEPTION PROPAGATION_________________________________" << endl;
+	promise<int> prom;
+	future<int> fut = prom.get_future();
+
+	thread print_thread{ print_func, std::ref(fut) };
+	thread calculate_sqrt_thread{ calculate_sqrt, std::ref(prom) };
+
+	print_thread.join();
+	calculate_sqrt_thread.join();
 }

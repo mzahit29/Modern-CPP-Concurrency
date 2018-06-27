@@ -16,4 +16,5 @@ public:
 	static void future_run_2();
 	static void packaged_task_run();
 	static void promise_run();
+	static void promise_exception_propagate_run();
 };
