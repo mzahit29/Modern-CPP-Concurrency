@@ -495,3 +495,28 @@ void Examples::promise_exception_propagate_run()
 	print_thread.join();
 	calculate_sqrt_thread.join();
 }
+
+void print_func2(shared_future<int>& fut)
+{
+	// if future<int> & was used instead of shared_future<int>, then both threads that are passed the same future will call fut.get()
+	// The first fut.get() will succeed but the second will make the program crash. You can still use fut.valid() to check if fut.get()
+	// is already called or not. But even still you could run into race condition meaning both threads call fut.valid() one after the
+	// other and both see that the fut.get() is not called yet. Then they both try fut.get() resulting in the same problem.
+	cout << fut.get() << " - valid future\n" << endl;
+}
+
+void Examples::shared_future_run()
+{
+	cout << "\n\nSHARED FUTURE_________________________________" << endl;
+	promise<int> prom;
+	shared_future<int> fut(prom.get_future());
+
+	thread t1{ print_func2, std::ref(fut) };
+	thread t2{ print_func2, std::ref(fut) };
+
+
+	prom.set_value(88);
+
+	t1.join();
+	t2.join();
+}
